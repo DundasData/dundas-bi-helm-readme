@@ -46,7 +46,7 @@ The following tables lists the configurable parameters of the Dundas BI chart an
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `dundas.bi`<br />`.version`  | The version of Dundas BI images to pull.    | `8.0.0.101` |
+| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `8.0.0.101` |
 
 # Key
 
@@ -54,111 +54,111 @@ When creating new databases through the chart you will be required to enter your
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `dundas.bi.key`<br />`.email`  | The email key required when creating databases.   | `placeholder@placeholder.com` |
-| `dundas.bi.key`<br />`.key`  | The key required when creating databases.   | `00000-00000-00000-00000` |
+| **dundas.bi.key.email**  | The email key required when creating databases.   | `placeholder@placeholder.com` |
+| **dundas.bi.key.key**  | The key required when creating databases.   | `00000-00000-00000-00000` |
 
 # Database
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `dundas.bi.appDb`<br />`.express`  | If you choose the express option database pods will be created and used for this instance. You will not have to set any other database values.  This will also create a secret used for the admin account.  | `false` |
-| `dundas.bi.appDb`<br />`.expressimage`  | Postgres image that is used for the express option.    | `postgres:13` |
-| `dundas.bi.appDb`<br />`.appDbConnString`  | The application database connection string.  This is used if `useExistingSecretForAppDbConnString` is set to false.   | `placeholder` |
-| `dundas.bi.appDb`<br />`.warehouseDbConnString`  | Optional - The warehouse database connection string.  If set to empty then the warehouse connection string is discovered from the application database.   | `` |
-| `dundas.bi.appDb`<br />`.useExistingSecretForAppDbConnString`  | If `useExistingSecretForAppDbConnString` is set to `true` the `appDbConnStringSecretName` and `appDbConnStringSecretKey` are used to set the application database connection string.  Otherwise, the `appDbConnString` is used.   | `false` |
-| `dundas.bi.appDb`<br />`.useExistingSecretForWarehouseDbConnString`  | If `useExistingSecretForWarehouseDbConnString` is set to `true` the `warehouseDbConnStringSecretName` and `warehouseDbConnStringSecretKey` are used to set the warehouse database connection string.  Otherwise, the `warehouseDbConnString` is used.   | `false` |
-| `dundas.bi.appDb`<br />`.secretKeyRef.appDbConnStringSecretName`  | The name of the secret that has the Dundas BI application database connection string.   | `placeholder` |
-| `dundas.bi.appDb`<br />`.secretKeyRef.appDbConnStringSecretKey`  | The key of the secret that has the Dundas BI application database connection string.   | `DBI_CS` |
-| `dundas.bi.appDb`<br />`.secretKeyRef.warehouseDbConnStringSecretName`  | The name of the secret that has the Dundas BI warehouse database connection string.   | `placeholder` |
-| `dundas.bi.appDb`<br />`.secretKeyRef.warehouseDbConnStringSecretKey`  | The key of the secret that has the Dundas BI warehouse database connection string.   | `DBI_WH_CS` |
-| `dundas.bi.appDb`<br />`.appStorage`  | The application database type either `SqlServer` or `Postgres`.   | SqlServer |
+| **dundas.bi.appDb.express**  | If you choose the express option database pods will be created and used for this instance. You will not have to set any other database values.  This will also create a secret used for the admin account.  | `false` |
+| **dundas.bi.appDb.expressimage**  | Postgres image that is used for the express option.    | `postgres:13` |
+| **dundas.bi.appDb.appDbConnString**  | The application database connection string.  This is used if `useExistingSecretForAppDbConnString` is set to false.   | `placeholder` |
+| **dundas.bi.appDb.warehouseDbConnString**  | Optional - The warehouse database connection string.  If set to empty then the warehouse connection string is discovered from the application database.   | `""` |
+| **dundas.bi.appDb.<br />useExistingSecretForAppDbConnString**  | If `useExistingSecretForAppDbConnString` is set to `true` the `appDbConnStringSecretName` and `appDbConnStringSecretKey` are used to set the application database connection string.  Otherwise, the `appDbConnString` is used.   | `false` |
+| **dundas.bi.appDb.<br />useExistingSecretForWarehouseDbConnString**  | If `useExistingSecretForWarehouseDbConnString` is set to `true` the `warehouseDbConnStringSecretName` and `warehouseDbConnStringSecretKey` are used to set the warehouse database connection string.  Otherwise, the `warehouseDbConnString` is used.   | `false` |
+| **dundas.bi.appDb.<br />secretKeyRef.appDbConnStringSecretName**  | The name of the secret that has the Dundas BI application database connection string.   | `placeholder` |
+| **dundas.bi.appDb.<br />secretKeyRef.appDbConnStringSecretKey**  | The key of the secret that has the Dundas BI application database connection string.   | `DBI_CS` |
+| **dundas.bi.appDb.<br />secretKeyRef.warehouseDbConnStringSecretName**  | The name of the secret that has the Dundas BI warehouse database connection string.   | `placeholder` |
+| **dundas.bi.appDb.<br />secretKeyRef.warehouseDbConnStringSecretKey**  | The key of the secret that has the Dundas BI warehouse database connection string.   | `DBI_WH_CS` |
+| **dundas.bi.appDb.appStorage**  | The application database type either `SqlServer` or `Postgres`.   | SqlServer |
 
 
 # Website
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `dundas.bi.website`<br />`.port` | The port in the Dundas BI website will be run on. | `8080` |
-| `dundas.bi.website`<br />`.replicaCount` | The number of Dundas BI website replicas.  This is only used if autoscaling.enabled is `false`. | `1` |
-| `dundas.bi.website`<br />`.autoscaling` | This parameters for auto scaling the Dundas BI website.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
-| `dundas.bi.website.image.override`<br />`.enabled` | Enables overriding the Dundas BI website image.    | `false` |
-| `dundas.bi.website.image.override`<br />`.name` | The name of the Dundas BI website image to override.    | `` |
-| `dundas.bi.website`<br />`.includeSchedulerAndAuthBridgeInWebsiteContainer` | When `true` this will deploy the scheduler and authbridge inside the Dundas BI website container.  If this is done you would not need a separate scheduler deployment and you would set `dundas.bi.scheduler.enabled` to `false`, and `dundas.bi.authbridge.enabled` to `false`.   | `false` |
-| `dundas.bi.website.ingress`<br />`.annotations`| The annotations applied to the website when ingress is enabled.  | `` |
-| `dundas.bi.website`<br />`.kind` | The authbridge kind.  | `Deployment` |
-| `dundas.bi.website.service`<br />`.enabled` | Enable the service.   | `true` |
-| `dundas.bi.website.service`<br />`.type` | The type of service.    | `ClusterIP` |
-| `dundas.bi.website.service`<br />`.sessionAffinity` | The sessionAffinity for the service.    | `ClientIP` |
+| **dundas.bi.website.port** | The port in the Dundas BI website will be run on. | `8080` |
+| **dundas.bi.website.replicaCount** | The number of Dundas BI website replicas.  This is only used if autoscaling.enabled is `false`. | `1` |
+| **dundas.bi.website.autoscaling** | This parameters for auto scaling the Dundas BI website.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
+| **dundas.bi.website.<br />image.override.enabled** | Enables overriding the Dundas BI website image.    | `false` |
+| **dundas.bi.website.<br />image.override.name** | The name of the Dundas BI website image to override.    | `` |
+| **dundas.bi.website.<br />includeSchedulerAndAuthBridge<br />InWebsiteContainer** | When `true` this will deploy the scheduler and authbridge inside the Dundas BI website container.  If this is done you would not need a separate scheduler deployment and you would set `dundas.bi.scheduler.enabled` to `false`, and `dundas.bi.authbridge.enabled` to `false`.   | `false` |
+| **dundas.bi.website.ingress.annotations** | The annotations applied to the website when ingress is enabled.  | `` |
+| **dundas.bi.website.kind** | The authbridge kind.  | `Deployment` |
+| **dundas.bi.website.service.enabled** | Enable the service.   | `true` |
+| **dundas.bi.website.service.type** | The type of service.    | `ClusterIP` |
+| **dundas.bi.website.<br />service.sessionAffinity** | The sessionAffinity for the service.    | `ClientIP` |
 
 # Scheduler
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `dundas.bi.scheduler`<br />`.enabled` | This will create the scheduler deployment.  | `true` |
-| `dundas.bi.scheduler`<br />`.replicaCount` | The number of Dundas BI scheduler replicas. | `1` |
-| `dundas.bi.scheduler`<br />`.sleepInSecondsOnStart` | Delay after the website has started to start the scheduler.    | `120` |
-| `dundas.bi.scheduler.image.override`<br />`.enabled` | Enables overriding the Dundas BI scheduler image.    | `false` |
-| `dundas.bi.scheduler.image.override`<br />`.name` | The name of the Dundas BI scheduler image to override.    | `` |
+| **dundas.bi.scheduler.enabled** | This will create the scheduler deployment.  | `true` |
+| **dundas.bi.scheduler.replicaCount** | The number of Dundas BI scheduler replicas. | `1` |
+| **dundas.bi.scheduler.sleepInSecondsOnStart** | Delay after the website has started to start the scheduler.    | `120` |
+| **dundas.bi.scheduler.image.override.enabled** | Enables overriding the Dundas BI scheduler image.    | `false` |
+| **dundas.bi.scheduler.image.override.name** | The name of the Dundas BI scheduler image to override.    | `""` |
 
 # AuthBridge
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `dundas.bi.authbridge`<br />`.port` | The port in the Dundas BI authbridge will be run on. | `8080` |
-| `dundas.bi.authbridge`<br />`.replicaCount` | The number of Dundas BI authbridge replicas.  This is only used if dundas.bi.authbridge.autoscaling.enabled is `false`. | `1` |
-| `dundas.bi.authbridge`<br />`.autoscaling` | This parameters for auto scaling the Dundas BI authbridge.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
-|`dundas.bi.authbridge.ingress`<br />`.annotations`| The annotations applied to the website when ingress is enabled.  | ``
-| `dundas.bi.authbridge`<br />`.enabled` | This will create the authbridge deployment.  | `false` |
-| `dundas.bi.authbridge.service`<br />`.enabled` | This will create the authbridge service.  | `true` |
-| `dundas.bi.authbridge.service`<br />`.type` | The authbridge service type.  | `ClusterIP` |
-| `dundas.bi.authbridge.service`<br />`.sessionAffinity` | The authbridge service sessionAffinity.  | `ClientIP` |
-| `dundas.bi.authbridge`<br />`.kind` | The authbridge kind.  | `Deployment` |
+| **dundas.bi.authbridge.port** | The port in the Dundas BI authbridge will be run on. | `8080` |
+| **dundas.bi.authbridge.replicaCount** | The number of Dundas BI authbridge replicas.  This is only used if dundas.bi.authbridge.autoscaling.enabled is `false`. | `1` |
+| **dundas.bi.authbridge.autoscaling** | This parameters for auto scaling the Dundas BI authbridge.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
+| **dundas.bi.authbridge.<br />ingress.annotations** | The annotations applied to the website when ingress is enabled.  | ``
+| **dundas.bi.authbridge.enabled** | This will create the authbridge deployment.  | `false` |
+| **dundas.bi.authbridge.service.enabled** | This will create the authbridge service.  | `true` |
+| **dundas.bi.authbridge.service.type** | The authbridge service type.  | `ClusterIP` |
+| **dundas.bi.authbridge.service.<br />sessionAffinity** | The authbridge service sessionAffinity.  | `ClientIP` |
+| **dundas.bi.authbridge.kind** | The authbridge kind.  | `Deployment` |
 
 # Setup
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `dundas.bi.setup.image.override`<br />`.enabled` | Enables overriding the Dundas BI setup image.    | `false` |
-| `dundas.bi.setup.image.override`<br />`.name` | The name of the Dundas BI setup image to override.    | `` |
-| `dundas.bi.setup.orchestrator.image.override`<br />`.enabled` | Enables overriding the Dundas BI setup orchestrator image.    | `false` |
-| `dundas.bi.setup.orchestrator.image.override`<br />`.name` | The name of the Dundas BI setup orchestrator image to override.    | `` |
+| **dundas.bi.setup.image.override.enabled** | Enables overriding the Dundas BI setup image.    | `false` |
+| **dundas.bi.setup.image.override.name** | The name of the Dundas BI setup image to override.    | `` |
+| **dundas.bi.setup.orchestrator.<br />image.override.enabled** | Enables overriding the Dundas BI setup orchestrator image.    | `false` |
+| **dundas.bi.setup.orchestrator.<br />image.override.name** | The name of the Dundas BI setup orchestrator image to override.    | `` |
 
 # Password
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `dundas.bi.password`<br />`.setAdminPassword` | Enables Set admin password when starting container.  This parameter is always `true` when `dundas.bi.appDb.express` is set to `true`. | `false` |
-| `dundas.bi.password`<br />`.useExistingSecretForAdminPassword` | Uses secret to set the admin password.  This will require the `generateRandomPassword` set to `false`. | `false` |
-| `dundas.bi.password.secretKeyRef`<br />`.adminPasswordSecretName` | The secret name to set the admin password. | `false` |
-| `dundas.bi.password.secretKeyRef`<br />`.adminPasswordSecretKey` | The secret key to set the admin password. | `false` |
-| `dundas.bi.password`<br />`.adminPassword` | The admin password is used when `generateRandomPassword`, and `useExistingSecretForAdminPassword` are `false`. | `false` |
-| `dundas.bi.password`<br />`.generateRandomPassword` | Will generate a random password when initializing Dundas BI.  This is done one time and then secret will exist and be reused. | `true` |
+| **dundas.bi.password.setAdminPassword** | Enables Set admin password when starting container.  This parameter is always `true` when **dundas.bi.appDb.express` is set to `true`. | `false` |
+| **dundas.bi.password.<br />useExistingSecretForAdminPassword** | Uses secret to set the admin password.  This will require the `generateRandomPassword` set to `false`. | `false` |
+| **dundas.bi.password.secretKeyRef.adminPasswordSecretName** | The secret name to set the admin password. | `false` |
+| **dundas.bi.password.secretKeyRef.adminPasswordSecretKey** | The secret key to set the admin password. | `false` |
+| **dundas.bi.password.adminPassword** | The admin password is used when `generateRandomPassword`, and `useExistingSecretForAdminPassword` are `false`. | `false` |
+| **dundas.bi.password.generateRandomPassword** | Will generate a random password when initializing Dundas BI.  This is done one time and then secret will exist and be reused. | `true` |
 
 
 # Image 
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `image.pullPolicy` | container image pull policy | `IfNotPresent` |
-| `image.PullSecrets` | | `[]`
+| **image.pullPolicy** | container image pull policy | `IfNotPresent` |
+| **image.PullSecrets** | | `[]`
 
 # Ingress
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `ingress.enabled` | Set to true to enable the ingress.    | `false` |
-| `ingress.hosts` | Proxied hosts.    | `[]` |
-| `ingress.tls` | This maximum number of Dundas BI websites when autoscaling.    | `[]` |
+| **ingress.enabled** | Set to true to enable the ingress.    | `false` |
+| **ingress.hosts** | Proxied hosts.    | `[]` |
+| **ingress.tls** | This maximum number of Dundas BI websites when autoscaling.    | `[]` |
 
 # Volume 
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| `dundas.bi`<br />`.extraVolumes` | Extra Volumes applied to the website, authbridge, scheduler, and setup containers.   | `[]` |
-| `dundas.bi`<br />`.extraVolumeMounts` | Extra Volume Mounts applied to the website, authbridge, scheduler, and setup containers.   | `[]` |
-| `dundas.bi.website`<br />`.extraVolumes` | Mounted extra volumes to the Dundas BI website, Setup containers.  The volume only needs to be added once to be used for both containers.      | `[]` |
-| `dundas.bi.website`<br />`.extraVolumeMounts` | Extra volume mounts for the Dundas BI website container.  | `[]` |
-| `dundas.bi.setup`<br />`.extraVolumes` | Mounted extra volumes to the Dundas BI website, Setup containers.  The volume only needs to be added once to be used for both containers.      | `[]` |
-| `dundas.bi.setup`<br />`.extraVolumeMounts` | Extra volume mounts for the Dundas BI setup image that runs the handle database container init.  These volume mounts are expected to be used with dt calls.    | `[]` |
+| **dundas.bi.extraVolumes** | Extra Volumes applied to the website, authbridge, scheduler, and setup containers.   | `[]` |
+| **dundas.bi.extraVolumeMounts** | Extra Volume Mounts applied to the website, authbridge, scheduler, and setup containers.   | `[]` |
+| **dundas.bi.website.extraVolumes** | Mounted extra volumes to the Dundas BI website, Setup containers.  The volume only needs to be added once to be used for both containers.      | `[]` |
+| **dundas.bi.website.extraVolumeMounts** | Extra volume mounts for the Dundas BI website container.  | `[]` |
+| **dundas.bi.setup.extraVolumes** | Mounted extra volumes to the Dundas BI website, Setup containers.  The volume only needs to be added once to be used for both containers.      | `[]` |
+| **dundas.bi.setup.extraVolumeMounts** | Extra volume mounts for the Dundas BI setup image that runs the handle database container init.  These volume mounts are expected to be used with dt calls.    | `[]` |
 
 # Defining the Dundas BI connection
 
