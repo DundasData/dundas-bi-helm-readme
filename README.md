@@ -129,7 +129,7 @@ When creating new databases through the chart you will be required to enter your
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
 | **dundas.bi.dt.setup.calls.<br />afterDatabaseCreation** |  DT calls that occur after the database is created.  This will only happen one time.    | `[]` |
-| **dundas.bi.dt.setup.calls.<br />image.onLoad** | DT calls that occur at the end of the handledatabase container init every time.    | `[]` |
+| **dundas.bi.dt.setup.calls.<br />onLoad** | DT calls that occur at the end of the handledatabase container init every time.    | `[]` |
 
 
 # Password
