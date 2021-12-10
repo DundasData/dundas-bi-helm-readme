@@ -42,6 +42,7 @@ helm delete my-dundasbi
 The command removes all the Kubernetes components associated with the chart and deletes the release.  Note if you use the express option the database server and databases will permanently removed when uninstalling the helm chart.
 
 # Parameters
+
 The following tables lists the configurable parameters of the Dundas BI chart and their default values.
 
 | Parameters | Description | Default |
@@ -75,6 +76,7 @@ When creating new databases through the chart you will be required to enter your
 
 
 # Website
+
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
 | **dundas.bi.website.port** | The port in the Dundas BI website will be run on. | `8080` |
@@ -121,6 +123,12 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.setup.image.override.name** | The name of the Dundas BI setup image to override.    | `` |
 | **dundas.bi.setup.orchestrator.<br />image.override.enabled** | Enables overriding the Dundas BI setup orchestrator image.    | `false` |
 | **dundas.bi.setup.orchestrator.<br />image.override.name** | The name of the Dundas BI setup orchestrator image to override.    | `` |
+
+# DT
+
+| **dundas.bi.dt.setup.calls.<br />afterDatabaseCreation** |  DT calls that occur after the database is created.  This will only happen one time.    | `[]` |
+| **dundas.bi.dt.setup.calls.<br />image.onLoad** | DT calls that occur at the end of the handledatabase container init every time.    | `[]` |
+
 
 # Password
 
@@ -180,8 +188,6 @@ The Dundas BI scheduler parameters are defined as parameters that start with `du
 
 There are two ways to enable the authbridge.  The first way is to set `dundas.bi.website.includeSchedulerAndAuthBridgeInWebsiteContainer` to `true`.  The second way is set `dundas.bi.website.includeSchedulerAndAuthBridgeInWebsiteContainer` to `false`, and set `dundas.bi.authbridge.enabled` to `true`.  In this case it requires the ingress to be enabled as the authbridge website needs to be placed as a virtual directory under the Dundas BI website.
 
-
-
 # Defining the Service
 
 To enable a service to be created with your Dundas BI helm deployment set the `dundas.bi.website.service.enabled` to `true`.  Otherwise it will be expected that after deploying you would set this up manually in Kubernetes.  If you plan on using an ingress the service type is set to the default which is `dundas.bi.website.service.ClusterIP`.  If want to expose the Dundas BI website but don't plan on using an ingress you would use `ClusterIP` and use a kubectl port forward command, or you can expose it by setting the `dundas.bi.website.service.type` to `LoadBalancer`.  These same settings also exist for the authbridge.
@@ -240,6 +246,32 @@ An upgrade can be accomplished by setting the `version` parameter to a new versi
 # Setup orchestrator
 
 The Dundas BI setup orchestrator provides a means of managing initialization traffic by providing a simple locking mechanism to prevent multiple pods running the initialization at the same time.  It is enabled when `dundas.bi.website.replicaCount` is greater than one, or if `dundas.bi.website.autoscaling.enabled` is set to `true`.
+
+# DT setup calls
+
+To call the Dundas BI dt utility during the setup process, use dt setup calls.  The following example adds three dundas bi dt calls, two that occur after database is created (1. Sets a Dundas BI configuration property 2. Imports a dbie file from a mounted volume. ), and one that occurs on load (Runs a healthcheck):  
+
+```
+dundas:
+  bi:
+    website:
+      extraVolumes:
+        - name: my-storage
+          persistentVolumeClaim:
+            claimName: scriptlibrary
+      extraVolumeMounts: 
+        - name: my-storage
+          mountPath: /tmp/scriptlibrary
+
+    dt:
+      setup:
+        calls:
+          onLoad:
+            - "healthcheck" 
+          afterDatabaseCreation:
+            - "setConfigValue /settingId:\"a0b50536-a9cb-444d-a5d6-330c6dc2dc07\" /value:\"0.0.0.0-255.255.255.255\""             
+            - "import /dbie:\"/tmp/scriptlibrary/DundasScriptLibrary.dbie\""
+```
 
 # Resource limits and requests
 
