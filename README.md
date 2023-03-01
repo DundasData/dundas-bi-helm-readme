@@ -47,7 +47,7 @@ The following tables lists the configurable parameters of the Dundas BI chart an
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `8.0.0.101` |
+| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `11.0.0.1000` |
 
 # Key
 
@@ -64,6 +64,7 @@ When creating new databases through the chart you will be required to enter your
 | ---------- | ----------- | ------- |
 | **dundas.bi.appDb.express**  | If you choose the express option database pods will be created and used for this instance. You will not have to set any other database values.  This will also create a secret used for the admin account.  | `false` |
 | **dundas.bi.appDb.expressimage**  | Postgres image that is used for the express option.    | `postgres:13` |
+| **dundas.bi.appDb.expressstoragesize**  | The size of the postgres pv.    | `10Gi` |
 | **dundas.bi.appDb.appDbConnString**  | The application database connection string.  This is used if `useExistingSecretForAppDbConnString` is set to false.   | `placeholder` |
 | **dundas.bi.appDb.warehouseDbConnString**  | Optional - The warehouse database connection string.  If set to empty then the warehouse connection string is discovered from the application database.   | `""` |
 | **dundas.bi.appDb.<br />useExistingSecretForAppDbConnString**  | If `useExistingSecretForAppDbConnString` is set to `true` the `appDbConnStringSecretName` and `appDbConnStringSecretKey` are used to set the application database connection string.  Otherwise, the `appDbConnString` is used.   | `false` |
@@ -115,6 +116,17 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.authbridge.service.<br />sessionAffinity** | The authbridge service sessionAffinity.  | `ClientIP` |
 | **dundas.bi.authbridge.kind** | The authbridge kind.  | `Deployment` |
 
+# GatewayHub
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.gatewayhub.port** | The port in the Dundas BI gatewayhub will be run on. | `8080` |
+| **dundas.bi.gatewayhub.<br />ingress.annotations** | The annotations applied to the website when ingress is enabled.  | ``
+| **dundas.bi.gatewayhub.enabled** | This will create the gatewayhub deployment.  | `false` |
+| **dundas.bi.gatewayhub.service.enabled** | This will create the gatewayhub service.  | `true` |
+| **dundas.bi.gatewayhub.service.type** | The gatewayhub service type.  | `ClusterIP` |
+| **dundas.bi.gatewayhub.kind** | The gatewayhub kind.  | `Deployment` |
+
+
 # Setup
 
 | Parameters | Description | Default |
@@ -131,6 +143,16 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.dt.setup.calls.<br />afterDatabaseCreation** |  DT calls that occur after the database is created.  This will only happen one time.    | `[]` |
 | **dundas.bi.dt.setup.calls.<br />onLoad** | DT calls that occur at the end of the handledatabase container init every time.    | `[]` |
 
+
+# Rabbit MQ
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.rabbitmq.enabled** |  # Enables the Rabbit MQ Broadcast service.   | `false` |
+| **dundas.bi.rabbitmq.kind**  | The Rabbit MQ deployment kind.    | `Deployment` |
+| **dundas.bi.rabbitmq.rabbitmqimage**  | The Rabbit MQ image name.    | `rabbitmq:3` |
+| **dundas.bi.rabbitmq.exchangename**  | The Rabbit MQ exchange name.    | `dundasbi` |
+| **dundas.bi.rabbitmq.storagesize**  | The size of the rabbitmq storage.    | `1Gi` |
 
 # Password
 
@@ -169,6 +191,21 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.website.extraVolumeMounts** | Extra volume mounts for the Dundas BI website container.  | `[]` |
 | **dundas.bi.setup.extraVolumes** | Mounted extra volumes to the Dundas BI website, Setup containers.  The volume only needs to be added once to be used for both containers.      | `[]` |
 | **dundas.bi.setup.extraVolumeMounts** | Extra volume mounts for the Dundas BI setup image that runs the handle database container init.  These volume mounts are expected to be used with dt calls.    | `[]` |
+| **dundas.bi.storageClassName** | The storage class used for volumes mounted for Dundas BI deployments.  This is optional and will not specify a class if one is not set.  | `` |
+
+# Sidecars and InitContainers
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.website.initContainers** | The init container added to the Dundas BI website.      | `[]` |
+| **dundas.bi.website.sidecars** | The sidecar container added to the Dundas BI website.  | `[]` |
+| **dundas.bi.scheduler.initContainers** | The init container added to the Dundas BI scheduler.      | `[]` |
+| **dundas.bi.scheduler.sidecars** | The sidecar container added to the Dundas BI scheduler.  | `[]` |
+| **dundas.bi.authbridge.initContainers** | The init container added to the Dundas BI authbridge.      | `[]` |
+| **dundas.bi.authbridge.sidecars** | The sidecar container added to the Dundas BI authbridge.  | `[]` |
+| **dundas.bi.gatewayhub.initContainers** | The init container added to the Dundas BI gatewayhub.      | `[]` |
+| **dundas.bi.gatewayhub.sidecars** | The sidecar container added to the Dundas BI gatewayhub.  | `[]` |
+
 
 # Defining the Dundas BI connection
 
@@ -285,10 +322,45 @@ Each of the following sections allows for setting of Kubernetes limits and reque
 * `dundas.bi.scheduler.resources`
 * `dundas.bi.authbridge.resources`
 * `dundas.bi.authbridge.reverseproxy.resources`
+* `dundas.bi.gatewayhub.resources`
 * `dundas.bi.setup.orchestrator.resources`
+* `dundas.bi.rabbitmq.resources`
 
 The initContainers resources will be the same as the pods corresponding limits and resource that it is initializing.
 
 # Access under a path
 
 If you want to access Dundas BI as a path under the site rather than at the root level, set `dundas.bi.virtualDirectoryPath` to the path, e.g. `/DBI/`.
+
+# Pod Disruption Budget 
+
+You can add a PodDisruptionBudget for each deployment included in the helm chart.  To do this define the following pdb section under the deployment sections like: dundas.bi.website, dundas.bi.scheduler, dundas.bi.authbridge, dundas.bi.gatewayhub, dundas.bi.rabbitmq.
+
+```
+pdb:
+  enabled: true
+  # Only one of the following can be defined for the PodDisruptionBudget.
+  minAvailable: 1
+  maxUnavailable: 1
+```
+
+An example for the Dundas BI website would be: 
+```
+dundas:
+  bi:
+    website:
+	  pdb:
+	    enabled: true
+		minAvailable: 1
+		
+```
+The Pod Disruption Budget can also be included for the express database deployment by setting the following:
+
+```
+dundas:
+  bi:
+    appDb:
+        expresspdb:
+          enabled: true
+          minAvailable: 1
+```
