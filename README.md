@@ -47,7 +47,7 @@ The following tables lists the configurable parameters of the Dundas BI chart an
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `11.0.0.1000` |
+| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `12.0.0.1` |
 
 # Key
 
@@ -73,6 +73,12 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.appDb.<br />secretKeyRef.appDbConnStringSecretKey**  | The key of the secret that has the Dundas BI application database connection string.   | `DBI_CS` |
 | **dundas.bi.appDb.<br />secretKeyRef.warehouseDbConnStringSecretName**  | The name of the secret that has the Dundas BI warehouse database connection string.   | `placeholder` |
 | **dundas.bi.appDb.<br />secretKeyRef.warehouseDbConnStringSecretKey**  | The key of the secret that has the Dundas BI warehouse database connection string.   | `DBI_WH_CS` |
+|**dundas.bi.appDb.useExistingSecretForAppDbCreatorConnectionString**| If `useExistingSecretForAppDbConnString` is set to `true` the `appDbCreatorConnStringSecretName` and `appDbCreatorConnStringSecretKey` are used to set the creator application database connection string. This is optional.  |`false`|
+|**dundas.bi.appDb.useExistingSecretForWhDbCreatorConnectionString**| If `useExistingSecretForAppDbConnString` is set to `true` the `warehouseDbCreatorConnStringSecretName` and `warehouseDbCreatorConnStringSecretKey` are used to set the creator warehouse database connection string.  This is optional. |`false`|
+|**dundas.bi.appDb.<br />secretKeyRef.appDbCreatorConnStringSecretName**| The name of the secret that has the Dundas BI application database creator connection string. This is optional.  |`placeholder`|
+|**dundas.bi.appDb.<br />secretKeyRef.appDbCreatorConnStringSecretKey**| The key of the secret that has the Dundas BI application database creator connection string. This is optional.  |`DBI_CREATOR_CONNECTION_STRING`|
+|**dundas.bi.appDb.<br />secretKeyRef.warehouseDbCreatorConnStringSecretName**| The name of the secret that has the Dundas BI warehouse database creator connection string. This is optional.  |`placeholder`|
+|**dundas.bi.appDb.<br />secretKeyRef.warehouseDbCreatorConnStringSecretKey**| The key of the secret that has the Dundas BI warehouse database creator connection string. This is optional.  |`DBI_WAREHOUSE_CREATOR_CONNECTION_STRING`|
 | **dundas.bi.appDb.appStorage**  | The application database type either `SqlServer` or `Postgres`.   | SqlServer |
 
 
@@ -117,6 +123,7 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.authbridge.kind** | The authbridge kind.  | `Deployment` |
 
 # GatewayHub
+
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
 | **dundas.bi.gatewayhub.port** | The port in the Dundas BI gatewayhub will be run on. | `8080` |
@@ -125,6 +132,27 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.gatewayhub.service.enabled** | This will create the gatewayhub service.  | `true` |
 | **dundas.bi.gatewayhub.service.type** | The gatewayhub service type.  | `ClusterIP` |
 | **dundas.bi.gatewayhub.kind** | The gatewayhub kind.  | `Deployment` |
+
+# Python
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.python.port** | The port in the Dundas BI python website will be run on. | `8080` |
+| **dundas.bi.python.enabled** | This will create the python deployment.  | `false` |
+| **dundas.bi.python.autoscaling** | This parameters for auto scaling the Dundas BI python website.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
+| **dundas.bi.python.service.enabled** | This will create the python service.  | `true` |
+| **dundas.bi.python.service.type** | The python service type.  | `ClusterIP` |
+| **dundas.bi.python.kind** | The python kind.  | `Deployment` |
+
+# Export
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.export.port** | The port in the Dundas BI export website will be run on. | `8080` |
+| **dundas.bi.export.enabled** | This will create the export deployment.  | `false` |
+| **dundas.bi.export.autoscaling** | This parameters for auto scaling the Dundas BI export website.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
+| **dundas.bi.export.service.enabled** | This will create the export service.  | `true` |
+| **dundas.bi.export.service.type** | The export service type.  | `ClusterIP` |
+| **dundas.bi.export.kind** | The export kind.  | `Deployment` |
 
 
 # Setup
@@ -158,13 +186,13 @@ When creating new databases through the chart you will be required to enter your
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
+| **dundas.bi.password.enforceDefaultPasswordPolicyAtHelm** | This will enforce the default password policy at the helm level when deploying. | `true` |
 | **dundas.bi.password.setAdminPassword** | Enables Set admin password when starting container.  This parameter is always `true` when `dundas.bi.appDb.express` is set to `true`. | `false` |
 | **dundas.bi.password.<br />useExistingSecretForAdminPassword** | Uses secret to set the admin password.  This will require the `generateRandomPassword` set to `false`. | `false` |
 | **dundas.bi.password.secretKeyRef.adminPasswordSecretName** | The secret name to set the admin password. | `false` |
 | **dundas.bi.password.secretKeyRef.adminPasswordSecretKey** | The secret key to set the admin password. | `false` |
 | **dundas.bi.password.adminPassword** | The admin password is used when `generateRandomPassword`, and `useExistingSecretForAdminPassword` are `false`. | `false` |
 | **dundas.bi.password.generateRandomPassword** | Will generate a random password when initializing Dundas BI.  This is done one time and then secret will exist and be reused. | `true` |
-
 
 # Image 
 
@@ -221,11 +249,19 @@ The Dundas BI website parameters are defined as parameters that start with `dund
 
 # Defining the Dundas BI scheduler
 
-The Dundas BI scheduler parameters are defined as parameters that start with `dundas.bi.scheduler`.  Dundas BI requires one scheduler service.  If multiple scheduler services are running only one will do the work at a time, and the other will act as a backup if the other goes down.  The Dundas BI Helm chart allows for multiple ways to set up the scheduler service.  It can be added to every website deployment by setting the `dundas.bi.website.includeSchedulerAndAuthBridgeInWebsiteContainer` to true.  This will add the scheduler to the website deployment container(s).  Alternatively, you can run the scheduler as a separate deployment by setting the `dundas.bi.scheduler.enabled` to `true`.
+The Dundas BI scheduler parameters are defined as parameters that start with `dundas.bi.scheduler`.  Dundas BI requires one scheduler service.  If multiple scheduler services are running only one will do the work at a time, and the other will act as a backup if the other goes down.  The Dundas BI Helm chart allows for multiple ways to set up the scheduler service.  It can be added to every website deployment by setting the `dundas.bi.website.useFullImage` to true.  This will add the scheduler to the website deployment container(s).  Alternatively, you can run the scheduler as a separate deployment by setting the `dundas.bi.scheduler.enabled` to `true`.
 
 # Defining the Dundas BI authbridge
 
-There are two ways to enable the authbridge.  The first way is to set `dundas.bi.website.includeSchedulerAndAuthBridgeInWebsiteContainer` to `true`.  The second way is set `dundas.bi.website.includeSchedulerAndAuthBridgeInWebsiteContainer` to `false`, and set `dundas.bi.authbridge.enabled` to `true`.  In this case it requires the ingress to be enabled as the authbridge website needs to be placed as a virtual directory under the Dundas BI website.
+There are two ways to enable the authbridge.  The first way is to set `dundas.bi.website.useFullImage` to `true`.  The second way is set `dundas.bi.website.useFullImage` to `false`, and set `dundas.bi.authbridge.enabled` to `true`.  In this case it requires the ingress to be enabled as the authbridge website needs to be placed as a virtual directory under the Dundas BI website.
+
+# Defining the Dundas BI export.
+
+There are two ways to enable the export.  The first way is to set `dundas.bi.website.useFullImage` to `true`.  The second way is set `dundas.bi.website.useFullImage` to `false`, and set `dundas.bi.export.enabled` to `true`.  
+
+# Defining the Dundas BI python.
+
+There are two ways to enable the python.  The first way is to set `dundas.bi.website.useFullImage` to `true`.  The second way is set `dundas.bi.website.useFullImage` to `false`, and set `dundas.bi.python.enabled` to `true`.  
 
 # Defining the Service
 
