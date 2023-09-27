@@ -47,7 +47,7 @@ The following tables lists the configurable parameters of the Dundas BI chart an
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `12.0.0.1` |
+| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `23.2` |
 
 # Key
 
@@ -161,6 +161,7 @@ When creating new databases through the chart you will be required to enter your
 | ---------- | ----------- | ------- |
 | **dundas.bi.setup.image.override.enabled** | Enables overriding the Dundas BI setup image.    | `false` |
 | **dundas.bi.setup.image.override.name** | The name of the Dundas BI setup image to override.    | `` |
+| **dundas.bi.setup.extraEnvs** | Extra environment variables added to the Dundas BI Setup (HandleDatabase) container.    | `` |
 | **dundas.bi.setup.orchestrator.<br />image.override.enabled** | Enables overriding the Dundas BI setup orchestrator image.    | `false` |
 | **dundas.bi.setup.orchestrator.<br />image.override.name** | The name of the Dundas BI setup orchestrator image to override.    | `` |
 
