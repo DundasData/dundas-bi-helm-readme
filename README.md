@@ -28,7 +28,7 @@ helm install my-dundasbi dundas/dundasbi               \
   --set dundas.bi.key.key="12345-54321-12345-54321"    
 ```
 
-> **_NOTE:_**  The email and key are available in the downloads section of the support site: [https://www.dundas.com/support/my-account/#downloads](https://www.dundas.com/support/my-account/#downloads).  If you do not have an account you can create one at [https://www.dundas.com/support/](https://www.dundas.com/support/). It's easy to create and free.
+> **_NOTE:_**  Contact Dundas if you do not have your email and key.
 
 This command deploys Dundas BI on the Kubernetes cluster in the default configuration. The Parameters section lists the parameters that can be configured during installation.
 
