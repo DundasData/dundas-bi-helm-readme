@@ -51,7 +51,7 @@ The following tables lists the configurable parameters of the Dundas BI chart an
 
 # Key
 
-When creating new databases through the chart you will be required to enter your email and key.  The key is available in the downloads section: [https://www.dundas.com/support/my-account/#downloads](https://www.dundas.com/support/my-account/#downloads). If you do not have an account you can create one at [https://www.dundas.com/support/](https://www.dundas.com/support/). It's easy to create and free. If you are not creating new databases these parameters can be left as defaults.
+When creating new databases through the chart you will be required to enter your email and key.  Contact Dundas if you do not have your email and key.
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
