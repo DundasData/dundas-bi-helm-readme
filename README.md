@@ -28,7 +28,7 @@ helm install my-dundasbi dundas/dundasbi               \
   --set dundas.bi.key.key="12345-54321-12345-54321"    
 ```
 
-> **_NOTE:_**  Contact Dundas if you do not have your email and key.
+> **_NOTE:_**  The email and key are available in the downloads section of the support site: [https://www.dundas.com/support/my-account/#downloads](https://www.dundas.com/support/my-account/#downloads).  If you do not have an account you can create one at [https://www.dundas.com/support/](https://www.dundas.com/support/). It's easy to create and free.
 
 This command deploys Dundas BI on the Kubernetes cluster in the default configuration. The Parameters section lists the parameters that can be configured during installation.
 
@@ -47,11 +47,11 @@ The following tables lists the configurable parameters of the Dundas BI chart an
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `23.2` |
+| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `23.3` |
 
 # Key
 
-When creating new databases through the chart you will be required to enter your email and key.  Contact Dundas if you do not have your email and key.
+When creating new databases through the chart you will be required to enter your email and key.  The key is available in the downloads section: [https://www.dundas.com/support/my-account/#downloads](https://www.dundas.com/support/my-account/#downloads). If you do not have an account you can create one at [https://www.dundas.com/support/](https://www.dundas.com/support/). It's easy to create and free. If you are not creating new databases these parameters can be left as defaults.
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
@@ -96,7 +96,8 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.website.kind** | The authbridge kind.  | `Deployment` |
 | **dundas.bi.website.service.enabled** | Enable the service.   | `true` |
 | **dundas.bi.website.service.type** | The type of service.    | `ClusterIP` |
-| **dundas.bi.website.<br />service.sessionAffinity** | The sessionAffinity for the service.    | `ClientIP` |
+| **dundas.bi.website.<br />service.sessionAffinity** | The sessionAffinity for the service.    | `None` |
+| **dundas.bi.website.useFullImage** | Determines if the full website image incorporating other services together is used as described in later sections. | `false` |
 
 # Scheduler
 
@@ -138,7 +139,7 @@ When creating new databases through the chart you will be required to enter your
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
 | **dundas.bi.python.port** | The port in the Dundas BI python website will be run on. | `8080` |
-| **dundas.bi.python.enabled** | This will create the python deployment.  | `false` |
+| **dundas.bi.python.enabled** | This will create the python deployment.  | `true` |
 | **dundas.bi.python.autoscaling** | This parameters for auto scaling the Dundas BI python website.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
 | **dundas.bi.python.service.enabled** | This will create the python service.  | `true` |
 | **dundas.bi.python.service.type** | The python service type.  | `ClusterIP` |
@@ -148,12 +149,21 @@ When creating new databases through the chart you will be required to enter your
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
 | **dundas.bi.export.port** | The port in the Dundas BI export website will be run on. | `8080` |
-| **dundas.bi.export.enabled** | This will create the export deployment.  | `false` |
+| **dundas.bi.export.enabled** | This will create the export deployment.  | `true` |
 | **dundas.bi.export.autoscaling** | This parameters for auto scaling the Dundas BI export website.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
 | **dundas.bi.export.service.enabled** | This will create the export service.  | `true` |
 | **dundas.bi.export.service.type** | The export service type.  | `ClusterIP` |
 | **dundas.bi.export.kind** | The export kind.  | `Deployment` |
 
+# Storage
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.storage.port** | The port in the Dundas BI storage website will be run on. | `8080` |
+| **dundas.bi.storage.enabled** | This will create the storage deployment.  | `true` |
+| **dundas.bi.storage.autoscaling** | This parameters for auto scaling the Dundas BI storage website.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
+| **dundas.bi.storage.service.enabled** | This will create the storage service.  | `true` |
+| **dundas.bi.storage.service.type** | The storage service type.  | `ClusterIP` |
+| **dundas.bi.storage.kind** | The storage kind.  | `Deployment` |
 
 # Setup
 
@@ -220,6 +230,12 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.website.extraVolumeMounts** | Extra volume mounts for the Dundas BI website container.  | `[]` |
 | **dundas.bi.setup.extraVolumes** | Mounted extra volumes to the Dundas BI website, Setup containers.  The volume only needs to be added once to be used for both containers.      | `[]` |
 | **dundas.bi.setup.extraVolumeMounts** | Extra volume mounts for the Dundas BI setup image that runs the handle database container init.  These volume mounts are expected to be used with dt calls.    | `[]` |
+| **dundas.bi.python.extraVolumes** | The extra volumes to the Dundas BI python containers.    | `[]` |
+| **dundas.bi.python.extraVolumeMounts** | The extra volume mounts for the python containers.   | `[]` |
+| **dundas.bi.export.extraVolumes** | The extra volumes to the Dundas BI export containers.       | `[]` |
+| **dundas.bi.export.extraVolumeMounts** | The extra volume mounts for the export containers.     | `[]` |
+| **dundas.bi.storage.extraVolumes** | The extra volumes to the Dundas BI storage containers.     | `[]` |
+| **dundas.bi.storage.extraVolumeMounts** | The extra volume mounts for the storage containers.    | `[]` |
 | **dundas.bi.storageClassName** | The storage class used for volumes mounted for Dundas BI deployments.  This is optional and will not specify a class if one is not set.  | `` |
 
 # Sidecars and InitContainers
@@ -234,6 +250,12 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.authbridge.sidecars** | The sidecar container added to the Dundas BI authbridge.  | `[]` |
 | **dundas.bi.gatewayhub.initContainers** | The init container added to the Dundas BI gatewayhub.      | `[]` |
 | **dundas.bi.gatewayhub.sidecars** | The sidecar container added to the Dundas BI gatewayhub.  | `[]` |
+| **dundas.bi.export.initContainers** | The init container added to the Dundas BI export.      | `[]` |
+| **dundas.bi.export.sidecars** | The sidecar container added to the Dundas BI export.  | `[]` |
+| **dundas.bi.python.initContainers** | The init container added to the Dundas BI python.      | `[]` |
+| **dundas.bi.python.sidecars** | The sidecar container added to the Dundas BI python.  | `[]` |
+| **dundas.bi.storage.initContainers** | The init container added to the Dundas BI storage.      | `[]` |
+| **dundas.bi.storage.sidecars** | The sidecar container added to the Dundas BI storage.  | `[]` |
 
 
 # Defining the Dundas BI connection
@@ -246,7 +268,7 @@ There are three ways to define the Dundas BI connection string:
 
 # Defining the Dundas BI website
 
-The Dundas BI website parameters are defined as parameters that start with `dundas.bi.website`.  The `dundas.bi.website.port` is the `port` defined in the service.   To scale the Dundas BI website you can either set the `dundas.bi.website.replicaCount` to the number of Dundas BI websites you would like across the cluster, or set the `dundas.bi.website.autoscaling` properties which will take precedence over the `dundas.bi.website.replicaCount` property.  When the `dundas.bi.website.autoscaling.enabled` paramter is `true` a HorizontalPodAutoscaler will be created in Kubernetes with the details.
+The Dundas BI website parameters are defined as parameters that start with `dundas.bi.website`.  The `dundas.bi.website.port` is the `port` defined in the service.   To scale the Dundas BI website you can either set the `dundas.bi.website.replicaCount` to the number of Dundas BI websites you would like across the cluster, or set the `dundas.bi.website.autoscaling` properties which will take precedence over the `dundas.bi.website.replicaCount` property.  When the `dundas.bi.website.autoscaling.enabled` parameter is `true` a HorizontalPodAutoscaler will be created in Kubernetes with the details.
 
 # Defining the Dundas BI scheduler
 
@@ -256,17 +278,27 @@ The Dundas BI scheduler parameters are defined as parameters that start with `du
 
 There are two ways to enable the authbridge.  The first way is to set `dundas.bi.website.useFullImage` to `true`.  The second way is set `dundas.bi.website.useFullImage` to `false`, and set `dundas.bi.authbridge.enabled` to `true`.  In this case it requires the ingress to be enabled as the authbridge website needs to be placed as a virtual directory under the Dundas BI website.
 
-# Defining the Dundas BI export.
+# Defining the Dundas BI export
 
 There are two ways to enable the export.  The first way is to set `dundas.bi.website.useFullImage` to `true`.  The second way is set `dundas.bi.website.useFullImage` to `false`, and set `dundas.bi.export.enabled` to `true`.  
 
-# Defining the Dundas BI python.
+# Defining the Dundas BI python
 
 There are two ways to enable the python.  The first way is to set `dundas.bi.website.useFullImage` to `true`.  The second way is set `dundas.bi.website.useFullImage` to `false`, and set `dundas.bi.python.enabled` to `true`.  
+
+# Defining the Dundas BI Storage
+
+The Dundas BI Storage service is enabled by setting `dundas.bi.storage.enabled` to `true`.  This service will move the building of warehoused and in-memory cubes into its own service, and away from the Dundas BI website.
 
 # Defining the Service
 
 To enable a service to be created with your Dundas BI helm deployment set the `dundas.bi.website.service.enabled` to `true`.  Otherwise it will be expected that after deploying you would set this up manually in Kubernetes.  If you plan on using an ingress the service type is set to the default which is `dundas.bi.website.service.ClusterIP`.  If want to expose the Dundas BI website but don't plan on using an ingress you would use `ClusterIP` and use a kubectl port forward command, or you can expose it by setting the `dundas.bi.website.service.type` to `LoadBalancer`.  These same settings also exist for the authbridge.
+
+# Session Affinity and Caching
+
+For optimal performance, we recommend enabling sticky sessions. Sticky sessions ensure that a user's requests are consistently directed to the same server instance. You can configure sticky sessions in various ways, depending on your ingress provider. Refer to your ingress provider's documentation for specific instructions.
+
+If it is not possible to use sticky sessions, a distributed caching provider must be enabled. We currently support a Redis distributed caching provider. To enable this, set `dundas.bi.cache.redis.enabled` to `true`. This will activate a Redis subchart, with subchart values specified in the Redis section of the Helm values file.
 
 # Load Balancing
 
@@ -317,7 +349,7 @@ In order for certain drivers to work it may be necessary to override the Dundas 
 
 # Upgrading
 
-An upgrade can be accomplished by setting the `version` parameter to a new version.  Upgrading a major version will require a database upgrade and this will be done automatically when setting the new `version`.  It is recomended to backup the Dundas BI databases before upgrading.
+An upgrade can be accomplished by setting the `version` parameter to a new version.  Upgrading a major version will require a database upgrade and this will be done automatically when setting the new `version`.  It is recommended to backup the Dundas BI databases before upgrading.
  
 # Setup orchestrator
 
@@ -325,7 +357,7 @@ The Dundas BI setup orchestrator provides a means of managing initialization tra
 
 # DT setup calls
 
-To call the Dundas BI dt utility during the setup process, use dt setup calls.  The following example adds three dundas bi dt calls, two that occur after database is created (1. Sets a Dundas BI configuration property 2. Imports a dbie file from a mounted volume. ), and one that occurs on load (Runs a healthcheck):  
+To call the Dundas BI dt utility during the setup process, use dt setup calls.  The following example adds three dundas bi dt calls, two that occur after database is created (1. Sets a Dundas BI configuration property, 2. Imports a dbie file from a mounted volume), and one that occurs on load (Runs a healthcheck):  
 
 ```
 dundas:
