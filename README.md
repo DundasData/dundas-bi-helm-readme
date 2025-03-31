@@ -47,7 +47,7 @@ The following tables lists the configurable parameters of the Dundas BI chart an
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `23.3` |
+| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `{CurrentMajorVersion}.{CurrentMinorVersion}` |
 
 # Key
 
@@ -138,12 +138,13 @@ When creating new databases through the chart you will be required to enter your
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| **dundas.bi.python.port** | The port in the Dundas BI python website will be run on. | `8080` |
-| **dundas.bi.python.enabled** | This will create the python deployment.  | `true` |
-| **dundas.bi.python.autoscaling** | This parameters for auto scaling the Dundas BI python website.    | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
-| **dundas.bi.python.service.enabled** | This will create the python service.  | `true` |
-| **dundas.bi.python.service.type** | The python service type.  | `ClusterIP` |
-| **dundas.bi.python.kind** | The python kind.  | `Deployment` |
+| **dundas.bi.python.autoscaling** | This parameter is for auto scaling the Dundas BI Python website. | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
+| **dundas.bi.python.enabled** | This will create the Python deployment. | `true` |
+| **dundas.bi.python.kind** | The Python kind. | `Deployment` |
+| **dundas.bi.python.maxReceiveMessageSize** | The maximum message size in MB that the Python service will accept. If empty, the default is used. | `` |
+| **dundas.bi.python.port** | The port the Dundas BI Python website will be run on. | `8080` |
+| **dundas.bi.python.service.enabled** | This will create the Python service. | `true` |
+| **dundas.bi.python.service.type** | The Python service type. | `ClusterIP` |
 
 # Export
 | Parameters | Description | Default |
@@ -169,6 +170,7 @@ When creating new databases through the chart you will be required to enter your
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
+| **dundas.bi.setup.handledatabase.<br />continueOnError** | This controls whether the Dundas BI website's database initialization container (handledatabase) should continue running despite encountering errors.  Starting with version 25.1 this will be defaulted to false.    | `false` |
 | **dundas.bi.setup.image.override.enabled** | Enables overriding the Dundas BI setup image.    | `false` |
 | **dundas.bi.setup.image.override.name** | The name of the Dundas BI setup image to override.    | `` |
 | **dundas.bi.setup.extraEnvs** | Extra environment variables added to the Dundas BI Setup (HandleDatabase) container.    | `` |
@@ -257,6 +259,11 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.storage.initContainers** | The init container added to the Dundas BI storage.      | `[]` |
 | **dundas.bi.storage.sidecars** | The sidecar container added to the Dundas BI storage.  | `[]` |
 
+# Microservice
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.microservice.initialLoggingVerbosity** | The initial log level for the EDC (Will always use this log level), Storage (Will use this log level until a build request), Python (Will use this log level until the first python request), and Export (Will use this log level until the first export request) microservices.  
 
 # Defining the Dundas BI connection
 
