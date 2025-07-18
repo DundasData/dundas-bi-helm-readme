@@ -1,4 +1,3 @@
-
 # Dundas BI
 
 Dundas BI is a state-of-the-art business intelligence platform for data exploration, visual analytics, and creating & sharing dashboards, reports, scorecards, and more. You can deploy Dundas BI as the central data portal for your organization, or integrate it into an existing website as part of a custom or embedded BI solution.
@@ -134,6 +133,17 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.gatewayhub.service.type** | The gatewayhub service type.  | `ClusterIP` |
 | **dundas.bi.gatewayhub.kind** | The gatewayhub kind.  | `Deployment` |
 
+# LogReceiver
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.logreceiver.port** | The port the Dundas BI LogReceiver will run on. | `8080` |
+| **dundas.bi.logreceiver.enabled** | This will create the LogReceiver deployment. | `false` |
+| **dundas.bi.logreceiver.autoscaling** | This parameters for auto scaling the Dundas BI LogReceiver. | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
+| **dundas.bi.logreceiver.service.enabled** | This will create the LogReceiver service. | `true` |
+| **dundas.bi.logreceiver.service.type** | The LogReceiver service type. | `ClusterIP` |
+| **dundas.bi.logreceiver.kind** | The LogReceiver kind. | `Deployment` |
+
 # Python
 
 | Parameters | Description | Default |
@@ -145,6 +155,7 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.python.port** | The port the Dundas BI Python website will be run on. | `8080` |
 | **dundas.bi.python.service.enabled** | This will create the Python service. | `true` |
 | **dundas.bi.python.service.type** | The Python service type. | `ClusterIP` |
+| **dundas.bi.python.setup.pythonModules** | List of Python modules to install, specified as a space-separated list (e.g. "SciPy==1.15.2 TensorFlow"). | `` |
 
 # Export
 | Parameters | Description | Default |
@@ -303,9 +314,9 @@ To enable a service to be created with your Dundas BI helm deployment set the `d
 
 # Session Affinity and Caching
 
-For optimal performance, we recommend enabling sticky sessions. Sticky sessions ensure that a user's requests are consistently directed to the same server instance. You can configure sticky sessions in various ways, depending on your ingress provider. Refer to your ingress provider's documentation for specific instructions.
+Dundas BI requires sticky sessions (session affinity) for correct operation. Sticky sessions ensure that a user's requests are consistently directed to the same server instance. Configure sticky sessions according to your ingress provider's documentation. For NGINX ingress, use the provided annotations example.
 
-If it is not possible to use sticky sessions, a distributed caching provider must be enabled. We currently support a Redis distributed caching provider. To enable this, set `dundas.bi.cache.redis.enabled` to `true`. This will activate a Redis subchart, with subchart values specified in the Redis section of the Helm values file.
+A distributed cache using Redis is available (`dundas.bi.cache.redis.enabled: true`), but has known issues and is not recommended. Sticky sessions are the supported approach.
 
 # Load Balancing
 
@@ -401,6 +412,7 @@ Each of the following sections allows for setting of Kubernetes limits and reque
 * `dundas.bi.gatewayhub.resources`
 * `dundas.bi.setup.orchestrator.resources`
 * `dundas.bi.rabbitmq.resources`
+* `dundas.bi.logreceiver.resources`
 
 The initContainers resources will be the same as the pods corresponding limits and resource that it is initializing.
 
@@ -440,3 +452,46 @@ dundas:
           enabled: true
           minAvailable: 1
 ```
+
+# Security Context and Deployment Settings
+
+Dundas BI supports configuring security contexts, node selectors, affinity rules, tolerations, image pull policies, and restart policies at multiple levels. These settings follow a hierarchical precedence where the most specific configuration is applied first:
+
+1. **Component-level settings** - Settings applied to a specific component; an example dundas.bi.website, or dundas.bi.authbridge (highest precedence)
+2. **Global settings** - Settings applied at the global level
+3. **Root/chart-level settings** - Default settings applied to all components (lowest precedence)
+
+## Available Settings
+
+The following settings can be configured at multiple levels:
+
+| Setting | Description |
+| ------- | ----------- |
+| `securityContext` | Container-level security context settings |
+| `podSecurityContext` | Pod-level security context settings |
+| `nodeSelector` | Node selection constraints |
+| `affinity` | Pod affinity/anti-affinity rules |
+| `restartPolicy` | Pod restart policy (Always, OnFailure, Never). **Note:** Any Job will always have a restart policy of `OnFailure`, and this is not configurable. Additionally, the restart policy does not follow the level 4 of the priority order and instead defaults to `Always`. |
+
+## Priority Order
+
+When determining which configuration to use, the chart follows this order:
+
+1. Look for component-specific setting (e.g., `dundas.bi.website.securityContext`, `dundas.bi.website.image.pullPolicy`)
+2. If not found, look for global setting (e.g., `global.securityContext`, `global.image.pullPolicy`)
+3. If not found, use chart-level setting (e.g., `securityContext`, `image.pullPolicy`)
+4. If none are defined, use Kubernetes defaults
+
+# Pod Annotations
+
+Dundas BI supports configuring pod annotations at multiple levels similar to other deployment settings. Pod annotations are useful for integrating with service meshes, monitoring tools, or indicating deployment actions. 
+
+## Annotation Levels
+
+Annotations can be defined at three levels:
+
+1. **Component-level** - Settings applied to a specific component (example: `dundas.bi.website.podAnnotations`)
+2. **Global-level** - Settings applied at the global level (`global.podAnnotations`)
+3. **Root/chart-level** - Settings applied to all components (`podAnnotations`)
+
+When annotations are defined at multiple levels, they are merged together. If the same annotation key is defined at multiple levels, the component-level value (1) takes precedence over global-level (2), which takes precedence over root-level (3).
