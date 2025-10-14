@@ -98,6 +98,115 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.website.<br />service.sessionAffinity** | The sessionAffinity for the service.    | `None` |
 | **dundas.bi.website.useFullImage** | Determines if the full website image incorporating other services together is used as described in later sections. | `false` |
 
+## Config Override
+
+Dundas BI supports configuration overrides through an XML file. This allows you to override default settings without modifying the application directly. The config override is shared across all Dundas BI components (website, storage, scheduler, gatewayhub, and authbridge).
+
+> **Note:** This override is the new way in which service URLs are injected into Dundas BI components.
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.<br />configOverride.enabled** | Enable shared config override functionality. When enabled, creates a ConfigMap with the override XML content that is mounted to all Dundas BI components (website, storage, scheduler, gatewayhub, authbridge, logreceiver, and edc). | `true` |
+| **dundas.bi.<br />configOverride.configData** | XML configuration data to override default settings. Supports Helm template syntax for dynamic values including service URLs and internal application URI. This serves as the fallback configuration for all services. | See values yaml |
+
+## Hierarchical Config Override System
+
+The config override system supports both **shared** and **service-specific** configurations with cascading logic:
+
+1. **Service-Specific Priority**: If a service has its own `configOverride` section, it will use that configuration
+2. **Shared Fallback**: If no service-specific config exists, the service falls back to the shared `dundas.bi.configOverride`
+3. **Conditional ConfigMaps**: Service-specific ConfigMaps are only created when explicitly enabled
+
+### Service-Specific Config Override
+
+Any Dundas BI service can have its own configuration override by adding a `configOverride` section:
+
+```yaml
+dundas:
+  bi:
+    # Shared config for all services (fallback)
+    configOverride:
+      enabled: true
+      configData: |
+        <?xml version="1.0" encoding="utf-8"?>
+        <Config>
+          <Module Id="EC04F56F-AAD2-4395-BCB3-35F5B1D0C8F1" Name="Core">
+            <!-- config override contents -->
+          </Module>
+        </Config>
+    
+    # Service-specific config override example
+    authbridge:
+      configOverride:
+        enabled: true
+        configData: |
+          <?xml version="1.0" encoding="utf-8"?>
+          <Config>
+            <Module Id="EC04F56F-AAD2-4395-BCB3-35F5B1D0C8F1" Name="Core">
+              <!-- config override contents -->
+            </Module>
+          </Config>
+```
+
+### Supported Services
+
+The following services support service-specific config overrides:
+- `website` - `/usr/share/dundas/bi/Files/Container/www/BIWebsite/App_Data/ConfigOverride.xml`
+- `storage` - `/usr/share/dundas/bi/Files/Container/www/BIWebStorage/App_Data/ConfigOverride.xml`
+- `scheduler` - `/usr/share/dundas/bi/Files/Container/www/BIWebsite/App_Data/ConfigOverride.xml`
+- `gatewayhub` - `/usr/share/dundas/bi/Files/Container/www/BIGatewayHub/App_Data/ConfigOverride.xml`
+- `authbridge` - `/usr/share/dundas/bi/Files/Container/www/BIWebsite/App_Data/ConfigOverride.xml`
+- `logreceiver` - `/usr/share/dundas/bi/Files/Container/www/BIWebLogReceiver/App_Data/ConfigOverride.xml`
+- `edc` - `/usr/share/dundas/bi/Files/Container/www/BIWebEDC/App_Data/ConfigOverride.xml`
+
+### ConfigMap Naming Convention
+
+- **Shared ConfigMap**: `<release-name>-config-override`
+- **Service-Specific ConfigMaps**: `<release-name>-<service>-config-override`
+
+### ⚠️ **Important Note for Service-Specific Overrides**
+
+When creating service-specific config overrides, you **must include the essential service URL settings** from the default shared configuration to maintain Dundas BI functionality. These settings ensure proper inter-service communication:
+
+```yaml
+dundas:
+  bi:
+    servicename:  # Replace with actual service name (authbridge, storage, etc.)
+      configOverride:
+        enabled: true
+        configData: |
+          <?xml version="1.0" encoding="utf-8"?>
+          <Config>
+            <Module Id="EC04F56F-AAD2-4395-BCB3-35F5B1D0C8F1" Name="Core">
+              <!-- REQUIRED: Copy these service URL settings from the default shared config -->
+              {{- if and .Values.dundas.bi.python .Values.dundas.bi.python.enabled .Values.dundas.bi.python.service.enabled }}
+              <Setting Name="PythonServiceUrl">http://{{ .Release.Name }}-dundas-bi-python{{ if ne .Release.Namespace "default" }}.{{ .Release.Namespace }}{{ end }}:{{ .Values.dundas.bi.python.port }}/</Setting>
+              {{- end }}
+              {{- if and .Values.dundas.bi.export .Values.dundas.bi.export.enabled .Values.dundas.bi.export.service.enabled }}
+              <Setting Name="ExportServiceUrl">http://{{ .Release.Name }}-dundas-bi-export{{ if ne .Release.Namespace "default" }}.{{ .Release.Namespace }}{{ end }}:{{ .Values.dundas.bi.export.port }}/</Setting>
+              {{- end }}
+              {{- if and .Values.dundas.bi.storage .Values.dundas.bi.storage.enabled .Values.dundas.bi.storage.service.enabled }}
+              <Setting Name="DataStorageServiceUrl">http://{{ .Release.Name }}-dundas-bi-storage{{ if ne .Release.Namespace "default" }}.{{ .Release.Namespace }}{{ end }}:{{ .Values.dundas.bi.storage.port }}/</Setting>
+              {{- end }}
+              {{- if and .Values.dundas.bi.gatewayhub .Values.dundas.bi.gatewayhub.enabled .Values.dundas.bi.gatewayhub.service.enabled }}
+              <Setting Name="GatewayHubUri">http://{{ .Release.Name }}-dundas-bi-gatewayhub{{ if ne .Release.Namespace "default" }}.{{ .Release.Namespace }}{{ end }}:{{ .Values.dundas.bi.gatewayhub.port }}/Gateway/</Setting>
+              {{- end }}
+              {{- if .Values.dundas.bi.internalApplicationUrl }}
+              <Setting Name="InternalApplicationUri">{{ .Values.dundas.bi.internalApplicationUrl }}</Setting>
+              {{- else }}
+              <Setting Name="InternalApplicationUri">http://{{ .Release.Name }}-dundas-bi-website{{ if ne .Release.Namespace "default" }}.{{ .Release.Namespace }}{{ end }}:{{ .Values.dundas.bi.website.port }}/</Setting>
+              {{- end }}
+              
+              <!-- Add your custom service-specific settings here -->
+              <Setting Name="YourCustomSetting">YourCustomValue</Setting>
+            </Module>
+          </Config>
+```
+
+> **Warning**: Omitting the required service URL settings will cause Dundas BI services to fail to communicate with each other, resulting in application possibly hitting the wrong internal service url, unless you have manually defined the service urls.
+
+For more information about available configuration settings, see the [Dundas BI CoreConfigSettingIds documentation](https://www.dundas.com/support/api-docs/net/#html/T_Dundas_BI_CoreConfigSettingIds.htm).
+
 # Scheduler
 
 | Parameters | Description | Default |
@@ -138,7 +247,7 @@ When creating new databases through the chart you will be required to enter your
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
 | **dundas.bi.logreceiver.port** | The port the Dundas BI LogReceiver will run on. | `8080` |
-| **dundas.bi.logreceiver.enabled** | This will create the LogReceiver deployment. | `false` |
+| **dundas.bi.logreceiver.enabled** | This will create the LogReceiver deployment. Only works when in Logi Symphony and discovery is enabled. | `false` |
 | **dundas.bi.logreceiver.autoscaling** | This parameters for auto scaling the Dundas BI LogReceiver. | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
 | **dundas.bi.logreceiver.service.enabled** | This will create the LogReceiver service. | `true` |
 | **dundas.bi.logreceiver.service.type** | The LogReceiver service type. | `ClusterIP` |
@@ -269,6 +378,40 @@ When creating new databases through the chart you will be required to enter your
 | **dundas.bi.python.sidecars** | The sidecar container added to the Dundas BI python.  | `[]` |
 | **dundas.bi.storage.initContainers** | The init container added to the Dundas BI storage.      | `[]` |
 | **dundas.bi.storage.sidecars** | The sidecar container added to the Dundas BI storage.  | `[]` |
+
+# Built-in Init Container Resources
+
+Dundas BI includes several built-in init containers that prepare the environment before the main containers start. You can configure resource limits and requests for these init containers:
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.initcontainer.waitForDundasBiWebsite.resources** | Resources for the init container that waits for the Dundas BI website to be ready. | `{}` |
+| **dundas.bi.initcontainer.waitConsul.resources** | Resources for the init container that waits for Consul to be ready. | `{}` |
+| **dundas.bi.initcontainer.dbiConfigInit.resources** | Resources for the init container that initializes DBI configuration. | `{}` |
+| **dundas.bi.initcontainer.handleDatabase.resources** | Resources for the init container that handles database setup and initialization. | `{}` |
+
+Example configuration:
+```yaml
+dundas:
+  bi:
+    initcontainer:
+      waitForDundasBiWebsite:
+        resources:
+          limits:
+            memory: 256Mi
+          requests:
+            memory: 128Mi
+      dbiConfigInit:
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            memory: 256Mi
+```
+
+**Backwards Compatibility**: If specific init container resources are not configured, the system will fall back to using the resources from the service that the init container is preparing (e.g., `dundas.bi.setup.resources` for DBI configuration init containers, `dundas.bi.website.resources` for handledatabase).
+
+**Note**: The Python setup init container (`initialize-python-share`) uses `dundas.bi.python.setup.resources` instead of the init container resource structure above, as it's only conditionally enabled when Python modules are configured.
 
 # Microservice
 
@@ -414,7 +557,13 @@ Each of the following sections allows for setting of Kubernetes limits and reque
 * `dundas.bi.rabbitmq.resources`
 * `dundas.bi.logreceiver.resources`
 
-The initContainers resources will be the same as the pods corresponding limits and resource that it is initializing.
+**Built-in Init Container Resources:**
+* `dundas.bi.initcontainer.waitForDundasBiWebsite.resources`
+* `dundas.bi.initcontainer.waitConsul.resources`
+* `dundas.bi.initcontainer.dbiConfigInit.resources`
+* `dundas.bi.initcontainer.handleDatabase.resources`
+
+For backwards compatibility, if specific init container resources are not configured, they will fall back to using the resources from their associated service. Custom initContainers (added via `dundas.bi.{service}.initContainers`) will use the same resources as the pods they are initializing.
 
 # Access under a path
 
