@@ -14,7 +14,11 @@ helm install my-dundasbi dundas/dundasbi \
 
 This chart bootstraps a Dundas BI deployment on a Kubernetes cluster using the Helm package manager.
 
-This chart has been tested to work with NGINX Ingress.
+This chart supports both traditional **Ingress** and **Kubernetes Gateway API** for traffic routing:
+- **NGINX Ingress Controller** - Tested and supported
+- **Kubernetes Gateway API** - Tested with NGINX Gateway Fabric v1.4.0, also supports Istio, Envoy Gateway, and other implementations
+
+Choose the routing method that best fits your infrastructure. Gateway API is recommended for new deployments as it provides more flexible and standardized routing capabilities.
 
 # Installing the chart
 
@@ -46,7 +50,7 @@ The following tables lists the configurable parameters of the Dundas BI chart an
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `{CurrentMajorVersion}.{CurrentMinorVersion}` |
+| **dundas.bi.version**  | The version of Dundas BI images to pull.    | `{CurrentVersion}` |
 
 # Key
 
@@ -100,22 +104,24 @@ When creating new databases through the chart you will be required to enter your
 
 ## Config Override
 
-Dundas BI supports configuration overrides through an XML file. This allows you to override default settings without modifying the application directly. The config override is shared across all Dundas BI components (website, storage, scheduler, gatewayhub, and authbridge).
+Dundas BI supports configuration overrides through an XML file. This allows you to override default settings without modifying the application directly. The config override is shared across all Dundas BI components (website, storage, scheduler, gatewayhub, authbridge, and edc).
 
 > **Note:** This override is the new way in which service URLs are injected into Dundas BI components.
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| **dundas.bi.<br />configOverride.enabled** | Enable shared config override functionality. When enabled, creates a ConfigMap with the override XML content that is mounted to all Dundas BI components (website, storage, scheduler, gatewayhub, authbridge, logreceiver, and edc). | `true` |
+| **dundas.bi.<br />configOverride.enabled** | Enable shared config override functionality. When enabled, creates a ConfigMap with the override XML content that is mounted to all Dundas BI components (website, storage, scheduler, gatewayhub, authbridge, and edc). | `true` |
 | **dundas.bi.<br />configOverride.configData** | XML configuration data to override default settings. Supports Helm template syntax for dynamic values including service URLs and internal application URI. This serves as the fallback configuration for all services. | See values yaml |
 
 ## Hierarchical Config Override System
+
+> **⚠️ Requirement:** `dundas.bi.configOverride.enabled` must be `true` to use config overrides (shared or service-specific).
 
 The config override system supports both **shared** and **service-specific** configurations with cascading logic:
 
 1. **Service-Specific Priority**: If a service has its own `configOverride` section, it will use that configuration
 2. **Shared Fallback**: If no service-specific config exists, the service falls back to the shared `dundas.bi.configOverride`
-3. **Conditional ConfigMaps**: Service-specific ConfigMaps are only created when explicitly enabled
+3. **Conditional ConfigMaps**: Service-specific ConfigMaps are only created when the master switch is enabled and the service-specific override is enabled
 
 ### Service-Specific Config Override
 
@@ -156,7 +162,7 @@ The following services support service-specific config overrides:
 - `scheduler` - `/usr/share/dundas/bi/Files/Container/www/BIWebsite/App_Data/ConfigOverride.xml`
 - `gatewayhub` - `/usr/share/dundas/bi/Files/Container/www/BIGatewayHub/App_Data/ConfigOverride.xml`
 - `authbridge` - `/usr/share/dundas/bi/Files/Container/www/BIWebsite/App_Data/ConfigOverride.xml`
-- `logreceiver` - `/usr/share/dundas/bi/Files/Container/www/BIWebLogReceiver/App_Data/ConfigOverride.xml`
+- `export` - `/usr/share/dundas/bi/Files/Container/www/BIExport/App_Data/ConfigOverride.xml`
 - `edc` - `/usr/share/dundas/bi/Files/Container/www/BIWebEDC/App_Data/ConfigOverride.xml`
 
 ### ConfigMap Naming Convention
@@ -195,8 +201,7 @@ dundas:
               <Setting Name="InternalApplicationUri">{{ .Values.dundas.bi.internalApplicationUrl }}</Setting>
               {{- else }}
               <Setting Name="InternalApplicationUri">http://{{ .Release.Name }}-dundas-bi-website{{ if ne .Release.Namespace "default" }}.{{ .Release.Namespace }}{{ end }}:{{ .Values.dundas.bi.website.port }}/</Setting>
-              {{- end }}
-              
+              {{- end }}     
               <!-- Add your custom service-specific settings here -->
               <Setting Name="YourCustomSetting">YourCustomValue</Setting>
             </Module>
@@ -216,6 +221,33 @@ For more information about available configuration settings, see the [Dundas BI 
 | **dundas.bi.scheduler.sleepInSecondsOnStart** | Delay after the website has started to start the scheduler.    | `120` |
 | **dundas.bi.scheduler.image.override.enabled** | Enables overriding the Dundas BI scheduler image.    | `false` |
 | **dundas.bi.scheduler.image.override.name** | The name of the Dundas BI scheduler image to override.    | `""` |
+
+# Cache (Redis)
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.cache.redis.enabled** | Enables Redis cache provider with custom Redis deployment. | `false` |
+| **dundas.bi.cache.redis.password** | Redis password. Leave empty for auto-generated secure password. | `""` |
+| **dundas.bi.cache.redis.auth.enabled** | Enable Redis authentication. | `true` |
+| **dundas.bi.cache.redis.auth.existingSecretName** | Use existing secret for Redis password (optional). | `""` |
+| **dundas.bi.cache.redis.auth.existingSecretKey** | Key in existing secret containing Redis password. | `redis-password` |
+| **dundas.bi.cache.redis.image.registry** | Redis image registry. | `docker.io` |
+| **dundas.bi.cache.redis.image.repository** | Redis image repository. | `redis` |
+| **dundas.bi.cache.redis.image.tag** | Redis image tag. | `8-alpine` |
+| **dundas.bi.cache.redis.maxmemory** | Redis maximum memory usage. | `409mb` |
+| **dundas.bi.cache.redis.maxmemoryPolicy** | Redis memory eviction policy. | `volatile-ttl` |
+| **dundas.bi.cache.redis.persistence.enabled** | Enable persistent storage for Redis. | `true` |
+| **dundas.bi.cache.redis.persistence.size** | Redis persistent volume size. | `8Gi` |
+| **dundas.bi.cache.redis.persistence.storageClass** | Storage class for Redis persistence. | `""` |
+| **dundas.bi.cache.redis.service.type** | Redis service type. | `ClusterIP` |
+| **dundas.bi.cache.redis.service.port** | Redis service port. | `6379` |
+| **dundas.bi.cache.redis.resources.limits.cpu** | Redis CPU limit. | `500m` |
+| **dundas.bi.cache.redis.resources.limits.memory** | Redis memory limit. | `512Mi` |
+| **dundas.bi.cache.redis.resources.requests.cpu** | Redis CPU request. | `250m` |
+| **dundas.bi.cache.redis.resources.requests.memory** | Redis memory request. | `256Mi` |
+| **dundas.bi.cache.redis.pdb.enabled** | Enable Pod Disruption Budget for Redis. | `false` |
+| **dundas.bi.cache.redis.pdb.minAvailable** | Minimum available Redis pods (PDB). | `nil` |
+| **dundas.bi.cache.redis.pdb.maxUnavailable** | Maximum unavailable Redis pods (PDB). | `nil` |
 
 # AuthBridge
 
@@ -241,17 +273,6 @@ For more information about available configuration settings, see the [Dundas BI 
 | **dundas.bi.gatewayhub.service.enabled** | This will create the gatewayhub service.  | `true` |
 | **dundas.bi.gatewayhub.service.type** | The gatewayhub service type.  | `ClusterIP` |
 | **dundas.bi.gatewayhub.kind** | The gatewayhub kind.  | `Deployment` |
-
-# LogReceiver
-
-| Parameters | Description | Default |
-| ---------- | ----------- | ------- |
-| **dundas.bi.logreceiver.port** | The port the Dundas BI LogReceiver will run on. | `8080` |
-| **dundas.bi.logreceiver.enabled** | This will create the LogReceiver deployment. Only works when in Logi Symphony and discovery is enabled. | `false` |
-| **dundas.bi.logreceiver.autoscaling** | This parameters for auto scaling the Dundas BI LogReceiver. | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
-| **dundas.bi.logreceiver.service.enabled** | This will create the LogReceiver service. | `true` |
-| **dundas.bi.logreceiver.service.type** | The LogReceiver service type. | `ClusterIP` |
-| **dundas.bi.logreceiver.kind** | The LogReceiver kind. | `Deployment` |
 
 # Python
 
@@ -285,6 +306,27 @@ For more information about available configuration settings, see the [Dundas BI 
 | **dundas.bi.storage.service.enabled** | This will create the storage service.  | `true` |
 | **dundas.bi.storage.service.type** | The storage service type.  | `ClusterIP` |
 | **dundas.bi.storage.kind** | The storage kind.  | `Deployment` |
+
+# EDC
+
+The EDC component allows for consumption of managed data in discovery. When enabled, it requires a Consul URL for service discovery.
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **dundas.bi.edc.enabled** | Enable the EDC deployment. | `false` |
+| **dundas.bi.edc.consulUrl** | The Consul URL for service discovery (required when EDC is enabled). Example: `http://consul-server.consul.svc.cluster.local:8500/` | `""` |
+| **dundas.bi.edc.port** | The port the Dundas BI EDC website will run on. | `8080` |
+| **dundas.bi.edc.replicaCount** | The number of EDC replicas (used when autoscaling is disabled). | `1` |
+| **dundas.bi.edc.autoscaling** | Parameters for auto scaling the Dundas BI EDC website. | `{ enabled: false, minReplicas: 1, maxReplicas: 100, targetCPUUtilizationPercentage: 80 }` |
+| **dundas.bi.edc.service.enabled** | Enable the EDC service. | `true` |
+| **dundas.bi.edc.service.type** | The EDC service type. | `ClusterIP` |
+| **dundas.bi.edc.service.sessionAffinity** | The EDC service session affinity. | `None` |
+| **dundas.bi.edc.kind** | The EDC deployment kind. | `Deployment` |
+| **dundas.bi.edc.resources** | Resources for the EDC pod. | `{ requests: { memory: 500Mi, cpu: 0.3 } }` |
+| **dundas.bi.edc.image.override.enabled** | Enable overriding the Dundas BI EDC image. | `false` |
+| **dundas.bi.edc.image.override.name** | The name of the Dundas BI EDC image to override. | `""` |
+
+**Note:** When EDC is enabled, the `consulUrl` parameter is required and must be set to a valid Consul service URL. The chart will fail validation if EDC is enabled without a Consul URL.
 
 # Setup
 
@@ -336,11 +378,170 @@ For more information about available configuration settings, see the [Dundas BI 
 
 # Ingress
 
+**Note:** Ingress and Gateway API are mutually exclusive. Only one can be enabled at a time. See [Gateway API](#gateway-api-chart-support---beta) section below for the alternative routing method.
+
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
 | **ingress.enabled** | Set to true to enable the ingress.    | `false` |
 | **ingress.hosts** | Proxied hosts.    | `[]` |
-| **ingress.tls** | This maximum number of Dundas BI websites when autoscaling.    | `[]` |
+| **ingress.tls** | TLS configuration for the Ingress (e.g., hosts and Kubernetes Secrets for HTTPS).    | `[]` |
+
+# Gateway API (chart support - beta)
+
+The Dundas BI Helm chart's Gateway API integration is considered "beta": it is built on the stable Gateway API v1.0.0 (including v1 HTTPRoute) but the chart values, defaults, and examples may still evolve based on user feedback and additional testing.
+
+**Note:** Gateway API does not yet provide standardized cookie-based session affinity. For scaled deployments (multiple website replicas), you must use Service-level ClientIP session affinity, which requires the Gateway Service to have `externalTrafficPolicy: Local`. See the [Session Affinity section](#gateway-api-session-affinity-for-scaling) below for details.
+
+Kubernetes Gateway API provides a more flexible and extensible alternative to Ingress for routing traffic to Dundas BI.
+
+**Prerequisites:**
+- Kubernetes 1.26+
+- Gateway API CRDs installed (v1.0.0 or higher recommended)
+- A Gateway API controller (NGINX Gateway Fabric, Istio, Envoy Gateway, etc.)
+- An existing Gateway resource
+
+## Quick Start with Gateway API
+
+```bash
+# 1. Install Gateway API CRDs 
+# See https://gateway-api.sigs.k8s.io/guides/getting-started/#installing-gateway-api for the most up-to-date command.
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml
+
+
+# 2. Install NGINX Gateway Fabric (or your preferred controller)
+# See https://docs.nginx.com/nginx-gateway-fabric/install/ for the most up-to-date command and install options.
+helm install ngf oci://ghcr.io/nginx/charts/nginx-gateway-fabric --version 2.4.2 --create-namespace -n nginx-gateway
+
+# 3. Create a Gateway resource
+cat <<EOF | kubectl apply -f -
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: dundas-gateway
+  namespace: default
+spec:
+  gatewayClassName: nginx
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+    allowedRoutes:
+      namespaces:
+        from: Same
+EOF
+
+# 4. Install Dundas BI
+helm install my-dundasbi dundas/dundasbi \
+  --set dundas.bi.key.email="youremail@yourdomain.com" \
+  --set dundas.bi.key.key="12345-54321-12345-54321" \
+  --set gatewayapi.enabled="true" \
+  --set gatewayapi.gateway.name="dundas-gateway" \
+  --set gatewayapi.httproute.hostnames[0]="dundas.example.com"
+```
+
+## Gateway API Parameters
+
+| Parameters | Description | Default |
+| ---------- | ----------- | ------- |
+| **gatewayapi.enabled** | Enable Gateway API routing (mutually exclusive with ingress.enabled) | `false` |
+| **gatewayapi.gateway.name** | Name of the existing Gateway resource | `""` |
+| **gatewayapi.gateway.namespace** | Namespace of the Gateway (defaults to release namespace if empty) | `""` |
+| **gatewayapi.httproute.hostnames** | List of hostnames for the HTTPRoute | `[]` |
+| **gatewayapi.httproute.parentRefs** | List of Gateway references (overrides gateway.name/namespace) | `[]` |
+| **gatewayapi.httproute.pathType** | Path match type: PathPrefix, Exact, or RegularExpression | `"PathPrefix"` |
+| **gatewayapi.httproute.website.filters** | Filters for website service routes | `[]` |
+| **gatewayapi.httproute.website.timeouts.request** | Website request timeout | `""` |
+| **gatewayapi.httproute.website.timeouts.backendRequest** | Website backend timeout | `""` |
+| **gatewayapi.httproute.website.additionalRules** | Additional rules for specific website paths | `[]` |
+| **gatewayapi.httproute.authbridge.filters** | Filters for AuthBridge service routes | `[]` |
+| **gatewayapi.httproute.authbridge.timeouts.request** | AuthBridge request timeout | `""` |
+| **gatewayapi.httproute.authbridge.timeouts.backendRequest** | AuthBridge backend timeout | `""` |
+| **gatewayapi.httproute.authbridge.additionalRules** | Additional rules for specific AuthBridge paths | `[]` |
+| **gatewayapi.httproute.gatewayhub.filters** | Filters for GatewayHub service routes | `[]` |
+| **gatewayapi.httproute.gatewayhub.timeouts.request** | GatewayHub request timeout (default: "0s" = no timeout for WebSocket) | `"0s"` |
+| **gatewayapi.httproute.gatewayhub.timeouts.backendRequest** | GatewayHub backend timeout (default: "0s" = no timeout for WebSocket) | `"0s"` |
+| **gatewayapi.httproute.gatewayhub.additionalRules** | Additional rules for specific GatewayHub paths | `[]` |
+| **gatewayapi.grpcroute.enabled** | Enable GRPCRoute for gRPC traffic | `false` |
+| **gatewayapi.referenceGrant.enabled** | Create ReferenceGrant for cross-namespace access | `false` |
+
+**Note:** 
+- Each service (website, authbridge, gatewayhub) can have its own filters, timeouts, and additional rules for path-specific configurations.
+- GatewayHub defaults to `"0s"` timeouts which explicitly means no timeout per Gateway API GEP-1742 (required for WebSocket).
+- Use `additionalRules` to override timeouts or add filters for specific paths within each service.
+- Rules are rendered in priority order: GatewayHub, AuthBridge, then Website (most specific to least specific paths).
+
+### Service-Specific Configuration Examples
+
+**Setting different timeouts per service:**
+```yaml
+gatewayapi:
+  enabled: true
+  gateway:
+    name: "dundas-gateway"
+  httproute:
+    hostnames:
+      - "dundas.example.com"
+    website:
+      timeouts:
+        request: "60s"
+        backendRequest: "90s"
+    authbridge:
+      timeouts:
+        request: "30s"
+        backendRequest: "45s"
+    gatewayhub:
+      timeouts:
+        request: "0s"      # No timeout for WebSocket (per GEP-1742)
+        backendRequest: "0s"  # No timeout for WebSocket (per GEP-1742)
+```
+
+**Using additionalRules for path-specific overrides:**
+```yaml
+gatewayapi:
+  enabled: true
+  gateway:
+    name: "dundas-gateway"
+  httproute:
+    hostnames:
+      - "dundas.example.com"
+    website:
+      timeouts:
+        request: "60s"
+        backendRequest: "90s"
+      additionalRules:
+        # Override timeout for a specific API path
+        - matches:
+            - path:
+                type: PathPrefix
+                value: "/api/data/retrieval"
+          timeouts:
+            request: "120s"
+            backendRequest: "150s"
+```
+
+## Gateway API: Session Affinity for Scaling
+
+**CRITICAL:** When running multiple website pods (replicas > 1), you must configure session affinity so that users are consistently routed to the same website pod.
+
+Gateway API does not have a standardized session affinity mechanism. Use Kubernetes Service-level session affinity:
+
+```yaml
+dundas:
+  bi:
+    website:
+      replicaCount: 3
+      service:
+        sessionAffinity: "ClientIP"
+```
+
+**Note:** The default session affinity timeout is typically 3 hours (10800 seconds). The Helm chart currently only supports setting the `sessionAffinity` field. For advanced configuration like custom timeout values, you may need to manually patch the Service after deployment.
+
+**Important:** The Gateway Service must use `externalTrafficPolicy: Local` to preserve client IP:
+
+```bash
+kubectl patch svc <gateway-service-name> -n <gateway-namespace> \
+  -p '{"spec":{"externalTrafficPolicy":"Local"}}'
+```
 
 # Volume 
 
@@ -417,7 +618,7 @@ dundas:
 
 | Parameters | Description | Default |
 | ---------- | ----------- | ------- |
-| **dundas.bi.microservice.initialLoggingVerbosity** | The initial log level for the EDC (Will always use this log level), Storage (Will use this log level until a build request), Python (Will use this log level until the first python request), and Export (Will use this log level until the first export request) microservices.  
+| **dundas.bi.microservice.initialLoggingVerbosity** | The initial log level for the EDC, Storage, Python, and Export microservices. EDC always uses this log level. Storage uses this until a build request, Python uses this until the first python request, and Export uses this until the first export request.  
 
 # Defining the Dundas BI connection
 
@@ -555,7 +756,7 @@ Each of the following sections allows for setting of Kubernetes limits and reque
 * `dundas.bi.gatewayhub.resources`
 * `dundas.bi.setup.orchestrator.resources`
 * `dundas.bi.rabbitmq.resources`
-* `dundas.bi.logreceiver.resources`
+* `redis.resources`
 
 **Built-in Init Container Resources:**
 * `dundas.bi.initcontainer.waitForDundasBiWebsite.resources`
@@ -644,3 +845,12 @@ Annotations can be defined at three levels:
 3. **Root/chart-level** - Settings applied to all components (`podAnnotations`)
 
 When annotations are defined at multiple levels, they are merged together. If the same annotation key is defined at multiple levels, the component-level value (1) takes precedence over global-level (2), which takes precedence over root-level (3).
+
+# Version History
+
+## Version 26.3
+
+| Change | Old Value | New Value | Impact |
+|--------|-----------|-----------|--------|
+| Container User ID | 1000 | 1111 | Resolves conflict with .NET 10 base images. Update `securityContext.runAsUser` to `1111` if explicitly set. |
+
