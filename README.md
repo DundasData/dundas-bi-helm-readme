@@ -845,12 +845,3 @@ Annotations can be defined at three levels:
 3. **Root/chart-level** - Settings applied to all components (`podAnnotations`)
 
 When annotations are defined at multiple levels, they are merged together. If the same annotation key is defined at multiple levels, the component-level value (1) takes precedence over global-level (2), which takes precedence over root-level (3).
-
-# Version History
-
-## Version 26.3
-
-| Change | Old Value | New Value | Impact |
-|--------|-----------|-----------|--------|
-| Container User ID | 1000 | 1111 | Resolves conflict with .NET 10 base images. Update `securityContext.runAsUser` to `1111` if explicitly set. |
-
